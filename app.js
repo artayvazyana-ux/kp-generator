@@ -28,6 +28,38 @@ const notesInput = document.getElementById("notes");
 let calendarDate = new Date();
 let selectedDate = null;
 
+// localStorage для черновика компании
+const COMPANY_STORAGE_KEY = "kp-company-draft";
+
+function saveCompanyData() {
+    const data = {
+        companyName: companyNameInput ? companyNameInput.value : "",
+        companyPhone: companyPhoneInput ? companyPhoneInput.value : "",
+        companyEmail: companyEmailInput ? companyEmailInput.value : "",
+        companyInfo: companyInfoInput ? companyInfoInput.value : "",
+    };
+    try {
+        localStorage.setItem(COMPANY_STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+        console.warn("Не удалось сохранить черновик компании:", e);
+    }
+}
+
+function loadCompanyData() {
+    try {
+        const saved = localStorage.getItem(COMPANY_STORAGE_KEY);
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (companyNameInput && data.companyName) companyNameInput.value = data.companyName;
+            if (companyPhoneInput && data.companyPhone) companyPhoneInput.value = data.companyPhone;
+            if (companyEmailInput && data.companyEmail) companyEmailInput.value = data.companyEmail;
+            if (companyInfoInput && data.companyInfo) companyInfoInput.value = data.companyInfo;
+        }
+    } catch (e) {
+        console.warn("Не удалось загрузить черновик компании:", e);
+    }
+}
+
 const previewCompanyName = document.getElementById("previewCompanyName");
 const previewCompanyPhone = document.getElementById("previewCompanyPhone");
 const previewCompanyEmail = document.getElementById("previewCompanyEmail");
@@ -718,6 +750,14 @@ inputsToWatch.forEach((el) => {
     }
 });
 
+const companyInputs = [companyNameInput, companyPhoneInput, companyEmailInput, companyInfoInput];
+companyInputs.forEach((el) => {
+    if (el) {
+        el.addEventListener("input", saveCompanyData);
+        el.addEventListener("change", saveCompanyData);
+    }
+});
+
 if (downloadPdfBtn) {
     downloadPdfBtn.addEventListener("click", downloadPdf);
 }
@@ -727,5 +767,6 @@ if (resetBtn) {
 }
 
 updateDate();
+loadCompanyData();
 createRow();
 updatePreview();
