@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор коммерческого предложения</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="container">
+            <h1 class="app-title">Генератор коммерческого предложения</h1>
+            <p class="app-subtitle">Создайте КП за пару минут и скачайте в PDF</p>
+        </div>
+    </header>
+
+    <main class="container main-grid">
+        <section class="panel editor-panel">
+            <div class="panel-header">
+                <h2>Редактор КП</h2>
+            </div>
+
+            <section class="card">
+                <div class="card-header">
+                    <h3>Данные компании</h3>
+                </div>
+                <div class="form-grid">
+                    <label class="form-field form-field--full">
+                        <span class="form-label">Название компании</span>
+                        <input type="text" id="companyName" placeholder="ООО «Название»">
+                    </label>
+                    <label class="form-field">
+                        <span class="form-label">Телефон</span>
+                        <input type="text" id="companyPhone" placeholder="+7 (XXX) XXX-XX-XX">
+                    </label>
+                    <label class="form-field">
+                        <span class="form-label">E-mail</span>
+                        <input type="text" id="companyEmail" placeholder="example@company.ru">
+                    </label>
+                    <label class="form-field form-field--full">
+                        <span class="form-label">Адрес / реквизиты (опционально)</span>
+                        <input type="text" id="companyInfo" placeholder="Юридический адрес, ИНН и др.">
+                    </label>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h3>Данные клиента</h3>
+                </div>
+                <div class="form-grid">
+                    <label class="form-field form-field--full">
+                        <span class="form-label">Кому (название компании / ФИО)</span>
+                        <input type="text" id="clientName" placeholder="Заказчик">
+                    </label>
+                    <label class="form-field">
+                        <span class="form-label">Телефон</span>
+                        <input type="text" id="clientPhone" placeholder="+7 (XXX) XXX-XX-XX">
+                    </label>
+                    <label class="form-field">
+                        <span class="form-label">E-mail</span>
+                        <input type="text" id="clientEmail" placeholder="client@example.ru">
+                    </label>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header card-header--split">
+                    <h3>Позиции КП</h3>
+                    <button type="button" class="btn btn--ghost" id="addRowBtn">+ Добавить строку</button>
+                </div>
+                <div class="table-wrapper">
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th class="col-name">Наименование услуги / работы</th>
+                                <th class="col-qty">Кол-во</th>
+                                <th class="col-unit">Ед.</th>
+                                <th class="col-price">Цена, ₽</th>
+                                <th class="col-sum">Сумма, ₽</th>
+                                <th class="col-actions"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody"></tbody>
+                    </table>
+                </div>
+                <div class="items-total">
+                    <span>Итого:</span>
+                    <strong id="totalSum">0 ₽</strong>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h3>Условия и примечания</h3>
+                </div>
+                <div class="form-grid">
+                    <label class="form-field">
+                        <span class="form-label">Срок действия КП</span>
+                        <div class="date-field">
+                            <input type="date" id="validUntil">
+                            <button type="button" class="date-trigger" id="validUntilTrigger" aria-label="Открыть календарь">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="calendar-popup" id="calendarPopup">
+                            <div class="calendar-header">
+                                <button type="button" class="calendar-nav" id="prevMonth">‹</button>
+                                <span class="calendar-title" id="calendarTitle"></span>
+                                <button type="button" class="calendar-nav" id="nextMonth">›</button>
+                            </div>
+                            <div class="calendar-weekdays">
+                                <span>Пн</span>
+                                <span>Вт</span>
+                                <span>Ср</span>
+                                <span>Чт</span>
+                                <span>Пт</span>
+                                <span>Сб</span>
+                                <span>Вс</span>
+                            </div>
+                            <div class="calendar-days" id="calendarDays"></div>
+                        </div>
+                    </label>
+                    <label class="form-field">
+                        <span class="form-label">Условия оплаты</span>
+                        <input type="text" id="paymentTerms" placeholder="Напр.: 100% предоплата / по договору">
+                    </label>
+                    <label class="form-field form-field--full">
+                        <span class="form-label">Примечания</span>
+                        <textarea id="notes" rows="4" placeholder="Дополнительная информация, гарантия, доставка и др."></textarea>
+                    </label>
+                </div>
+            </section>
+
+            <div class="actions">
+                <button type="button" class="btn btn--primary" id="downloadPdfBtn">Скачать КП в PDF</button>
+                <button type="button" class="btn btn--ghost" id="resetBtn">Очистить форму</button>
+            </div>
+        </section>
+
+        <section class="panel preview-panel">
+            <div class="panel-header panel-header--split">
+                <h2>Предпросмотр</h2>
+                <span class="preview-hint">Так будет выглядеть в PDF</span>
+            </div>
+            <div class="preview-wrapper">
+                <div id="kpPreview" class="kp-preview">
+                    <header class="kp-header">
+                        <div class="kp-company">
+                            <div class="kp-company-name" id="previewCompanyName">Название вашей компании</div>
+                            <div class="kp-company-details">
+                                <div id="previewCompanyPhone"></div>
+                                <div id="previewCompanyEmail"></div>
+                                <div id="previewCompanyInfo"></div>
+                            </div>
+                        </div>
+                        <div class="kp-meta">
+                            <div class="kp-meta-row">
+                                <span>Коммерческое предложение</span>
+                            </div>
+                            <div class="kp-meta-row">
+                                <span>Дата:</span>
+                                <span id="previewDate"></span>
+                            </div>
+                            <div class="kp-meta-row">
+                                <span>Действует до:</span>
+                                <span id="previewValidUntil"></span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <section class="kp-section">
+                        <div class="kp-section-title">Для кого</div>
+                        <div class="kp-client">
+                            <div id="previewClientName">Укажите получателя КП</div>
+                            <div id="previewClientPhone"></div>
+                            <div id="previewClientEmail"></div>
+                        </div>
+                    </section>
+
+                    <section class="kp-section">
+                        <div class="kp-section-title">Перечень работ и услуг</div>
+                        <div class="kp-table-wrapper">
+                            <table class="kp-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Наименование</th>
+                                        <th>Кол-во</th>
+                                        <th>Ед.</th>
+                                        <th>Цена, ₽</th>
+                                        <th>Сумма, ₽</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="previewItemsBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="kp-total">
+                            <span>Итого:</span>
+                            <strong id="previewTotalSum">0 ₽</strong>
+                        </div>
+                    </section>
+
+                    <section class="kp-section" id="previewConditions">
+                        <div class="kp-section-title">Условия</div>
+                        <div class="kp-conditions">
+                            <div id="previewPaymentTerms"></div>
+                            <div id="previewNotes"></div>
+                        </div>
+                    </section>
+
+                    <footer class="kp-footer">
+                        <div>С уважением,</div>
+                        <div class="kp-footer-company" id="previewFooterCompany">Название вашей компании</div>
+                    </footer>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <template id="itemRowTemplate">
+        <tr class="item-row">
+            <td>
+                <input type="text" class="item-input item-input--name" placeholder="Услуга или работа">
+            </td>
+            <td>
+                <input type="text" inputmode="decimal" class="item-input item-input--qty" placeholder="1">
+            </td>
+            <td>
+                <input type="text" class="item-input item-input--unit" placeholder="шт.">
+            </td>
+            <td>
+                <input type="text" inputmode="decimal" class="item-input item-input--price" placeholder="0">
+            </td>
+            <td class="item-sum-cell">
+                <span class="item-sum">0 ₽</span>
+            </td>
+            <td class="item-actions">
+                <button type="button" class="icon-btn remove-row" title="Удалить строку">✕</button>
+            </td>
+        </tr>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+    <script>
+        if (typeof window.htmlToImage === "undefined" && typeof htmlToImage !== "undefined") {
+            window.htmlToImage = htmlToImage;
+        }
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
