@@ -263,6 +263,33 @@ function downloadPdf() {
         return;
     }
 
+    const companyName = companyNameInput ? companyNameInput.value.trim() : "";
+    const clientName = clientNameInput ? clientNameInput.value.trim() : "";
+    const rows = itemsBody ? itemsBody.querySelectorAll(".item-row") : [];
+    let hasPosition = false;
+    rows.forEach((row) => {
+        const nameInput = row.querySelector(".item-input--name");
+        if (nameInput && nameInput.value.trim() !== "") {
+            hasPosition = true;
+        }
+    });
+
+    if (!companyName) {
+        alert("Заполните название компании");
+        companyNameInput.focus();
+        return;
+    }
+    if (!clientName) {
+        alert("Укажите клиента (для кого КП)");
+        clientNameInput.focus();
+        return;
+    }
+    if (!hasPosition) {
+        alert("Добавьте хотя бы одну позицию");
+        addRowBtn.focus();
+        return;
+    }
+
     const prevScrollY = window.scrollY || 0;
     window.scrollTo(0, 0);
 
