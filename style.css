@@ -279,6 +279,7 @@ body::before {
     color: #e53e3e;
     font-size: 12px;
     font-weight: 600;
+    margin-left: 4px;
 }
 
 input,
