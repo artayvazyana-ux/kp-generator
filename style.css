@@ -50,7 +50,7 @@ body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at top, #0f1026, #15182b);
+    background: radial-gradient(circle at top, #1a1d3a, #0f1026);
     pointer-events: none;
     z-index: -1;
 }
@@ -196,7 +196,7 @@ body::before {
     background: #1d2038;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
-    box-shadow: 0 40px 60px -60px rgba(79, 155, 255, 0.6);
+    box-shadow: 0 40px 60px -60px rgba(79, 155, 255, 0.5);
     backdrop-filter: blur(12px);
     overflow: hidden;
     transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
@@ -205,7 +205,7 @@ body::before {
 [data-theme="light"] .card {
     background: #ffffff;
     border: 1px solid #e5e7f2;
-    box-shadow: 0 40px 60px -60px rgba(79, 155, 255, 0.3);
+    box-shadow: 0 40px 60px -60px rgba(79, 155, 255, 0.15);
 }
 
 .card-header {
@@ -286,7 +286,7 @@ textarea {
     width: 100%;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #1d2038;
+    background: #15182b;
     color: #f8f9fc;
     font-family: inherit;
     font-size: 15px;
@@ -310,7 +310,7 @@ textarea {
     align-items: center;
     width: 100%;
     min-height: 44px;
-    background: #1d2038;
+    background: #15182b;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-sizing: border-box;
@@ -349,6 +349,8 @@ textarea {
 .date-trigger {
     position: absolute;
     right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 34px;
     height: 34px;
     border-radius: 999px;
@@ -356,7 +358,7 @@ textarea {
     background: transparent;
     color: #b9bfd9;
     display: inline-flex;
-    align-items: center
+    align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: color 150ms ease, background 150ms ease;
@@ -383,7 +385,7 @@ textarea {
     top: calc(100% + 8px);
     left: 0;
     width: 280px;
-    background: #1d2038;
+    background: #15182b;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     box-shadow: 0 40px 80px -40px rgba(15, 16, 38, 0.9);
@@ -398,7 +400,7 @@ textarea {
 [data-theme="light"] .calendar-popup {
     background: #ffffff;
     border: 1px solid #e5e7f2;
-    box-shadow: 0 40px 80px -40px rgba(15, 16, 38, 0.3);
+    box-shadow: 0 40px 80px -40px rgba(15, 16, 38, 0.15);
 }
 
 .calendar-popup.open {
@@ -730,7 +732,7 @@ textarea:focus {
 .preview-wrapper {
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #1d2038;
+    background: #15182b;
     padding: clamp(16px, 4vw, 32px);
     overflow-x: auto;
     overflow-y: visible;
