@@ -4,8 +4,6 @@
 
 **[Открыть приложение →](https://artayvazyana-ux.github.io/kp-generator/)**
 
-![Скриншот приложения](https://artayvazyana-ux.github.io/kp-generator/)
-
 ## Возможности
 
 - **Данные компании** — название, телефон, e-mail, реквизиты
@@ -26,26 +24,6 @@
 - **html2pdf.js** — генерация PDF
 - **Google Fonts (Inter)** — типографика
 
-## Запуск локально
-
-### Вариант 1: Просто открыть файл
-
-Открой `index.html` в браузере двойным кликом.
-
-### Вариант 2: Локальный сервер (рекомендуется)
-
-```bash
-# Через npx (Node.js должен быть установлен)
-npx http-server ./kp-generator -p 8080
-
-# Или через Python
-python -m http.server 8000
-```
-
-После запуска открой в браузере:
-- http://127.0.0.1:8080
-- http://localhost:8080
-
 ## Структура проекта
 
 ```
@@ -62,16 +40,6 @@ kp-generator/
 
 🔗 https://artayvazyana-ux.github.io/kp-generator/
 
-### Как обновить сайт
-
-```bash
-git add -A
-git commit -m "Описание изменений"
-git push
-```
-
-GitHub Pages автоматически обновится через 1-2 минуты.
-
 ## Планы на будущее
 
 - [ ] Сохранение черновиков в localStorage
@@ -80,6 +48,4 @@ GitHub Pages автоматически обновится через 1-2 мин
 - [ ] Отправка КП по e-mail
 - [ ] Мультиязычность
 
-## Лицензия
 
-MIT
