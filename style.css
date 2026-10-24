@@ -589,14 +589,16 @@ textarea:focus {
     text-align: right;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     color: #4f5568;
+    align-items: flex-end;
 }
 
 .kp-meta-row {
     display: flex;
-    gap: 10px;
+    gap: 2px;
     justify-content: flex-end;
+    white-space: nowrap;
 }
 
 .kp-section {
