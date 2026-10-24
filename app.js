@@ -6,6 +6,20 @@ const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
 const resetBtn = document.getElementById("resetBtn");
 
+const themeToggle = document.getElementById("themeToggle");
+const THEME_STORAGE_KEY = "kp-theme";
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+}
+
+if (themeToggle) {
+    themeToggle.addEventListener("click", toggleTheme);
+}
+
 const companyNameInput = document.getElementById("companyName");
 const companyPhoneInput = document.getElementById("companyPhone");
 const companyEmailInput = document.getElementById("companyEmail");
@@ -293,25 +307,48 @@ function updatePreview() {
 }
 
 function downloadPdf() {
-    const element = document.getElementById("kpPreview");
-    if (!element) {
-        alert("Не найден предпросмотр КП");
-        return;
-    }
     if (typeof window.html2pdf !== "function") {
         alert("Библиотека html2pdf не загрузилась. Попробуйте открыть файл через локальный сервер (http://127.0.0.1:8080)");
         return;
     }
 
+    // Collect all data
     const companyName = companyNameInput ? companyNameInput.value.trim() : "";
+    const companyPhone = companyPhoneInput ? companyPhoneInput.value.trim() : "";
+    const companyEmail = companyEmailInput ? companyEmailInput.value.trim() : "";
+    const companyInfo = companyInfoInput ? companyInfoInput.value.trim() : "";
+
     const clientName = clientNameInput ? clientNameInput.value.trim() : "";
+    const clientPhone = clientPhoneInput ? clientPhoneInput.value.trim() : "";
+    const clientEmail = clientEmailInput ? clientEmailInput.value.trim() : "";
+
+    const validUntil = validUntilInput ? validUntilInput.value : "";
+    const paymentTerms = paymentTermsInput ? paymentTermsInput.value.trim() : "";
+    const notes = notesInput ? notesInput.value.trim() : "";
+
     const rows = itemsBody ? itemsBody.querySelectorAll(".item-row") : [];
     let hasPosition = false;
+    const items = [];
     rows.forEach((row) => {
         const nameInput = row.querySelector(".item-input--name");
-        if (nameInput && nameInput.value.trim() !== "") {
-            hasPosition = true;
-        }
+        const qtyInput = row.querySelector(".item-input--qty");
+        const unitInput = row.querySelector(".item-input--unit");
+        const priceInput = row.querySelector(".item-input--price");
+        
+        const name = nameInput ? nameInput.value.trim() : "";
+        const parseNumber = (val) => {
+            if (!val) return 0;
+            const normalized = val.toString().replace(",", ".");
+            const num = parseFloat(normalized);
+            return isNaN(num) ? 0 : num;
+        };
+        const qty = parseNumber(qtyInput && qtyInput.value);
+        const unit = unitInput ? unitInput.value.trim() : "";
+        const price = parseNumber(priceInput && priceInput.value);
+        const sum = qty * price;
+        
+        if (name !== "") hasPosition = true;
+        items.push({ name, qty, unit, price, sum });
     });
 
     if (!companyName) {
@@ -330,31 +367,191 @@ function downloadPdf() {
         return;
     }
 
-    const prevScrollY = window.scrollY || 0;
-    window.scrollTo(0, 0);
+    // Build PDF HTML with completely independent styles
+    const pdfHtml = buildPdfHtml({
+        companyName, companyPhone, companyEmail, companyInfo,
+        clientName, clientPhone, clientEmail,
+        validUntil, paymentTerms, notes, items
+    });
+
+    // Create hidden wrapper for rendering
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "fixed";
+    wrapper.style.left = "-20000px";
+    wrapper.style.top = "0";
+    wrapper.style.width = "210mm";
+    wrapper.style.height = "297mm";
+    wrapper.style.background = "#ffffff";
+    wrapper.style.padding = "0";
+    wrapper.style.overflow = "hidden";
+    wrapper.style.zIndex = "-9999";
+    wrapper.style.opacity = "0";
+    wrapper.style.pointerEvents = "none";
+
+    wrapper.innerHTML = pdfHtml;
+    document.body.appendChild(wrapper);
+
+    const element = wrapper.firstElementChild;
 
     const opt = {
-        margin: [10, 10, 10, 10],
+        margin: 0,
         filename: "kommercheskoe-predlozhenie.pdf",
         image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+        html2canvas: { scale: 2.5, useCORS: true, logging: false, scrollX: 0, scrollY: 0, width: 794 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         pagebreak: { mode: ["avoid-all", "css", "legacy"] }
     };
 
+    const prevScrollY = window.scrollY || 0;
+    window.scrollTo(0, 0);
+
     try {
-        window.html2pdf().set(opt).from(element).save().then(() => {
-            window.scrollTo(0, prevScrollY);
-        }).catch((err) => {
-            console.error(err);
-            window.scrollTo(0, prevScrollY);
-            alert("Не удалось сформировать PDF. Попробуйте ещё раз.");
-        });
+        window.html2pdf()
+            .set(opt)
+            .from(wrapper.firstElementChild)
+            .save()
+            .then(() => {
+                document.body.removeChild(wrapper);
+                window.scrollTo(0, prevScrollY);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (wrapper.parentNode) document.body.removeChild(wrapper);
+                window.scrollTo(0, prevScrollY);
+                alert("Не удалось сформировать PDF. Попробуйте ещё раз.");
+            });
     } catch (err) {
         console.error(err);
+        if (wrapper.parentNode) document.body.removeChild(wrapper);
         window.scrollTo(0, prevScrollY);
         alert("Не удалось сформировать PDF. Попробуйте ещё раз.");
     }
+}
+
+// Build completely independent PDF HTML with inline styles
+function buildPdfHtml(data) {
+    const { companyName, companyPhone, companyEmail, companyInfo, clientName, clientPhone, clientEmail, validUntil, paymentTerms, notes, items } = data;
+    
+    const formatCurrency = (value) => {
+        const num = typeof value === "number" && !isNaN(value) ? value : 0;
+        return new Intl.NumberFormat("ru-RU").format(Math.max(num, 0)) + " ₽";
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return "—";
+        try {
+            const d = new Date(dateStr + "T00:00:00");
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString("ru-RU");
+        } catch (e) {
+            return dateStr;
+        }
+    };
+
+    const today = new Date().toLocaleDateString("ru-RU");
+
+    // Build items rows
+    let itemsHtml = "";
+    items.forEach((item, index) => {
+        const bg = index % 2 === 0 ? "#ffffff" : "#fafbfe";
+        itemsHtml += `
+            <tr style="background:${bg};">
+                <td style="padding:10px 14px;border:1px solid #eceef7;text-align:center;">${index + 1}</td>
+                <td style="padding:10px 14px;border:1px solid #eceef7;">${item.name || "—"}</td>
+                <td style="padding:10px 14px;border:1px solid #eceef7;text-align:right;">${item.qty}</td>
+                <td style="padding:10px 14px;border:1px solid #eceef7;text-align:center;">${item.unit || "—"}</td>
+                <td style="padding:10px 14px;border:1px solid #eceef7;text-align:right;">${formatCurrency(item.price)}</td>
+                <td style="padding:10px 14px;border:1px solid #eceef7;text-align:right;">${formatCurrency(item.qty * item.price)}</td>
+            </tr>
+        `;
+    });
+
+    const total = items.reduce((acc, it) => acc + it.qty * it.price, 0);
+
+    return `
+    <div style="
+        width: 210mm;
+        min-height: 297mm;
+        background: #ffffff;
+        color: #1f2430;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.5;
+        padding: 18mm 16mm 20mm;
+        box-sizing: border-box;
+        box-shadow: none;
+    ">
+        <!-- Header -->
+        <header style="display:flex;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap;">
+            <div>
+                <div style="font-size:18px;font-weight:600;">${companyName}</div>
+                <div style="margin-top:6px;color:#4f5568;font-size:12px;display:flex;flex-direction:column;gap:2px;">
+                    ${companyPhone ? `<div>${companyPhone}</div>` : ""}
+                    ${companyEmail ? `<div>${companyEmail}</div>` : ""}
+                    ${companyInfo ? `<div>${companyInfo}</div>` : ""}
+                </div>
+            </div>
+            <div style="text-align:right;display:flex;flex-direction:column;gap:4px;color:#4f5568;font-size:12px;">
+                <div>Коммерческое предложение</div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;"><span>Дата:</span><span>${new Date().toLocaleDateString("ru-RU")}</span></div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;"><span>Действует до:</span><span>${formatDate(validUntil)}</span></div>
+            </div>
+        </header>
+
+        <!-- Client -->
+        <section style="margin-bottom:22px;">
+            <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">Для кого</div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+                <div>${clientName || "—"}</div>
+                ${clientPhone ? `<div>${clientPhone}</div>` : ""}
+                ${clientEmail ? `<div>${clientEmail}</div>` : ""}
+            </div>
+        </section>
+
+        <!-- Items Table -->
+        <section style="margin-bottom:22px;">
+            <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">Перечень работ и услуг</div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;min-width:640px;font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:7%;text-align:center;">#</th>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:47%;">Наименование</th>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:10%;text-align:right;">Кол-во</th>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:9%;text-align:center;">Ед.</th>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:13%;text-align:right;">Цена, ₽</th>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:14%;text-align:right;">Сумма, ₽</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:16px;margin-top:10px;font-size:14px;">
+                <span>Итого:</span>
+                <strong>${new Intl.NumberFormat("ru-RU").format(total)} ₽</strong>
+            </div>
+        </section>
+
+        <!-- Conditions -->
+        ${(paymentTerms || notes) ? `
+        <section style="margin-bottom:22px;">
+            <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">Условия</div>
+            <div style="display:flex;flex-direction:column;gap:6px;color:#4f5568;font-size:12px;">
+                ${paymentTerms ? `<div><strong>Условия оплаты:</strong> ${paymentTerms}</div>` : ""}
+                ${notes ? `<div><strong>Примечания:</strong> ${notes}</div>` : ""}
+            </div>
+        </section>
+        ` : ""}
+
+        <!-- Footer -->
+        <footer style="margin-top:30px;display:flex;flex-direction:column;gap:4px;font-size:12px;">
+            <div>С уважением,</div>
+            <div style="font-weight:600;">${companyName}</div>
+        </footer>
+    </div>
+    `;
 }
 
 function collectKpData() {
@@ -495,13 +692,13 @@ function downloadDocx() {
                     new Paragraph({ text: "" }),
                     data.paymentTerms
                         ? new Paragraph({
-                              children: [new TextRun({ text: "Условия оплаты: ", bold: true }), new TextRun(data.paymentTerms)],
-                          })
+                            children: [new TextRun({ text: "Условия оплаты: ", bold: true }), new TextRun(data.paymentTerms)],
+                        })
                         : new Paragraph({}),
                     data.notes
                         ? new Paragraph({
-                              children: [new TextRun({ text: "Примечания: ", bold: true }), new TextRun(data.notes)],
-                          })
+                            children: [new TextRun({ text: "Примечания: ", bold: true }), new TextRun(data.notes)],
+                        })
                         : new Paragraph({}),
                     new Paragraph({ text: "" }),
                     new Paragraph({ text: "С уважением," }),
@@ -561,7 +758,7 @@ function downloadPng() {
     if (typeof window.htmlToImage === "undefined" && typeof htmlToImage !== "undefined") {
         window.htmlToImage = htmlToImage;
     }
-    if (typeof window.htmlToImage === "undefined") {
+    if (typeof window.html2pdf === "undefined") {
         alert("Библиотека для PNG не загрузилась. Попробуйте обновить страницу.");
         window.scrollTo(0, prevScrollY);
         return;
@@ -668,6 +865,7 @@ function renderCalendar() {
             selectedDate = dateObj;
             if (validUntilInput) {
                 validUntilInput.value = toISODate(dateObj);
+                validUntilInput.dispatchEvent(new Event("change", { bubbles: true }));
             }
             calendarPopup.classList.remove("open");
             updatePreview();
