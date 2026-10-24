@@ -151,6 +151,15 @@ body {
 .form-label {
     font-size: 14px;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.required {
+    color: #e53e3e;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 input,
