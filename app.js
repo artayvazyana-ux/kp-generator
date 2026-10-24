@@ -60,6 +60,14 @@ function loadCompanyData() {
     }
 }
 
+function clearCompanyData() {
+    try {
+        localStorage.removeItem(COMPANY_STORAGE_KEY);
+    } catch (e) {
+        console.warn("Не удалось удалить черновик компании:", e);
+    }
+}
+
 const previewCompanyName = document.getElementById("previewCompanyName");
 const previewCompanyPhone = document.getElementById("previewCompanyPhone");
 const previewCompanyEmail = document.getElementById("previewCompanyEmail");
@@ -591,6 +599,7 @@ function resetForm() {
     if (itemsBody) {
         itemsBody.innerHTML = "";
     }
+    clearCompanyData();
     createRow();
     updateDate();
     updatePreview();
