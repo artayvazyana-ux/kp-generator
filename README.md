@@ -40,6 +40,11 @@ kp-generator/
 
 🔗 https://artayvazyana-ux.github.io/kp-generator/
 
+## Поддержать автора
+
+Если проект оказался полезным, вы можете поддержать автора:
+[![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Поддержать-orange)](https://www.donationalerts.com/r/shirosait)
+
 ## Планы на будущее
 
 - [ ] Сохранение черновиков в localStorage
