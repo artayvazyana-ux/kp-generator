@@ -53,9 +53,11 @@ const translations = {
         invalidDate: "—",
         paymentPlaceholder: "Напр.: 100% предоплата / по договору",
         notesPlaceholder: "Дополнительная информация, гарантия, доставка и др.",
+        datePlaceholder: "дд.мм.гггг",
         companyPlaceholder: "ООО «Название»",
         phonePlaceholder: "+7 (XXX) XXX-XX-XX",
         emailPlaceholder: "example@company.ru",
+        companyInfoPlaceholder: "Юридический адрес, ИНН и др.",
         clientPlaceholder: "Заказчик",
         clientPhonePlaceholder: "+7 (XXX) XXX-XX-XX",
         clientEmailPlaceholder: "client@example.ru",
@@ -81,6 +83,7 @@ const translations = {
         conditionsLabelHeader: "Условия",
         totalLabel: "Итого:",
         colNumber: "#",
+        colNamePreview: "Наименование",
     },
     en: {
         appTitle: "Commercial Proposal Generator",
@@ -123,9 +126,11 @@ const translations = {
         invalidDate: "—",
         paymentPlaceholder: "e.g. 100% prepayment / per contract",
         notesPlaceholder: "Additional info, warranty, delivery, etc.",
+        datePlaceholder: "mm/dd/yyyy",
         companyPlaceholder: "LLC «Name»",
         phonePlaceholder: "+1 (XXX) XXX-XX-XX",
         emailPlaceholder: "example@company.com",
+        companyInfoPlaceholder: "Legal address, Tax ID, etc.",
         clientPlaceholder: "Client",
         clientPhonePlaceholder: "+1 (XXX) XXX-XX-XX",
         clientEmailPlaceholder: "client@example.com",
@@ -151,6 +156,7 @@ const translations = {
         conditionsLabelHeader: "Terms",
         totalLabel: "Total:",
         colNumber: "#",
+        colNamePreview: "Description",
     }
 };
 
@@ -164,7 +170,9 @@ const clientNameInput = document.getElementById("clientName");
 const clientPhoneInput = document.getElementById("clientPhone");
 const clientEmailInput = document.getElementById("clientEmail");
 const validUntilInput = document.getElementById("validUntil");
+const validUntilDisplay = document.getElementById("validUntilDisplay");
 const validUntilTrigger = document.getElementById("validUntilTrigger");
+const dateFieldWrapper = document.getElementById("dateFieldWrapper");
 const calendarPopup = document.getElementById("calendarPopup");
 const calendarTitle = document.getElementById("calendarTitle");
 const calendarDays = document.getElementById("calendarDays");
@@ -241,7 +249,25 @@ function updateAllTexts() {
     if (calendarPopup && calendarPopup.classList.contains("open")) {
         renderCalendar();
     }
+    updateDate();
+    updateDateFieldDisplay();
+    updateRowSums();
     updatePreview();
+}
+
+function updateDateFieldDisplay() {
+    if (!validUntilDisplay) return;
+    const val = validUntilInput ? validUntilInput.value : "";
+    if (!val) {
+        validUntilDisplay.value = "";
+        return;
+    }
+    const d = fromISODate(val);
+    if (d) {
+        validUntilDisplay.value = d.toLocaleDateString(getTranslation("dateFormat"));
+    } else {
+        validUntilDisplay.value = val;
+    }
 }
 
 function loadCompanyData() {
@@ -300,11 +326,30 @@ if (langToggle) langToggle.addEventListener("click", toggleLanguage);
 initTheme();
 initLanguage();
 
-const formatter = new Intl.NumberFormat("ru-RU");
+function parseNumber(val) {
+    if (!val) return 0;
+    const normalized = val.toString().replace(",", ".");
+    const num = parseFloat(normalized);
+    return isNaN(num) ? 0 : num;
+}
 
 function formatCurrency(value) {
     const num = typeof value === "number" && !isNaN(value) ? value : 0;
-    return `${formatter.format(Math.max(num, 0))} ${getTranslation("currency")}`;
+    return `${new Intl.NumberFormat(getTranslation("dateFormat")).format(Math.max(num, 0))} ${getTranslation("currency")}`;
+}
+
+function updateRowSums() {
+    if (!itemsBody) return;
+    const rows = itemsBody.querySelectorAll(".item-row");
+    rows.forEach(row => {
+        const qtyInput = row.querySelector(".item-input--qty");
+        const priceInput = row.querySelector(".item-input--price");
+        const sumEl = row.querySelector(".item-sum");
+        const qty = parseNumber(qtyInput && qtyInput.value);
+        const price = parseNumber(priceInput && priceInput.value);
+        const sum = qty * price;
+        if (sumEl) sumEl.textContent = formatCurrency(sum);
+    });
 }
 
 function setText(el, value, placeholder = "") {
@@ -342,18 +387,11 @@ function createRow() {
     const sumEl = row.querySelector(".item-sum");
     const removeBtn = row.querySelector(".remove-row");
 
-    const parseNumber = (val) => {
-        if (!val) return 0;
-        const normalized = val.toString().replace(",", ".");
-        const num = parseFloat(normalized);
-        return isNaN(num) ? 0 : num;
-    };
-
     const update = () => {
         const qty = parseNumber(qtyInput && qtyInput.value);
         const price = parseNumber(priceInput && priceInput.value);
         const sum = qty * price;
-        if (sumEl) sumEl.textContent = `${formatter.format(Math.max(sum, 0))} ${getTranslation("currency")}`;
+        if (sumEl) sumEl.textContent = formatCurrency(sum);
         updatePreview();
     };
 
@@ -434,12 +472,6 @@ function updatePreview() {
         const priceInputEl = row.querySelector(".item-input--price");
 
         const name = nameInputEl ? nameInputEl.value.trim() : "";
-        const parseNumber = (val) => {
-            if (!val) return 0;
-            const normalized = val.toString().replace(",", ".");
-            const num = parseFloat(normalized);
-            return isNaN(num) ? 0 : num;
-        };
         const qty = parseNumber(qtyInputEl && qtyInputEl.value);
         const unit = unitInputEl ? unitInputEl.value.trim() : "";
         const price = parseNumber(priceInputEl && priceInputEl.value);
@@ -491,12 +523,6 @@ function downloadPdf() {
         const unitInput = row.querySelector(".item-input--unit");
         const priceInput = row.querySelector(".item-input--price");
         const name = nameInput ? nameInput.value.trim() : "";
-        const parseNumber = (val) => {
-            if (!val) return 0;
-            const normalized = val.toString().replace(",", ".");
-            const num = parseFloat(normalized);
-            return isNaN(num) ? 0 : num;
-        };
         const qty = parseNumber(qtyInput && qtyInput.value);
         const unit = unitInput ? unitInput.value.trim() : "";
         const price = parseNumber(priceInput && priceInput.value);
@@ -654,7 +680,7 @@ function buildPdfHtml(data) {
                     <thead>
                         <tr>
                             <th style="text-align:center;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">#</th>
-                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("colName")}</th>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("colNamePreview")}</th>
                             <th style="text-align:right;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("colQty")}</th>
                             <th style="text-align:center;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("colUnit")}</th>
                             <th style="text-align:right;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("priceLabel")}, ${getTranslation("currency")}</th>
@@ -741,6 +767,7 @@ function renderCalendar() {
                 validUntilInput.value = toISODate(dateObj);
                 validUntilInput.dispatchEvent(new Event("change", { bubbles: true }));
             }
+            updateDateFieldDisplay();
             if (calendarPopup) calendarPopup.classList.remove("open");
             updatePreview();
         });
@@ -777,8 +804,8 @@ function closeCalendar() {
     if (calendarPopup) calendarPopup.classList.remove("open");
 }
 
-if (validUntilTrigger) {
-    validUntilTrigger.addEventListener("click", (e) => {
+if (dateFieldWrapper) {
+    dateFieldWrapper.addEventListener("click", (e) => {
         e.stopPropagation();
         if (calendarPopup && calendarPopup.classList.contains("open")) {
             closeCalendar();
@@ -806,7 +833,7 @@ if (nextMonthBtn) {
 
 document.addEventListener("click", (e) => {
     if (!calendarPopup || !calendarPopup.classList.contains("open")) return;
-    if (calendarPopup.contains(e.target) || (validUntilTrigger && validUntilTrigger.contains(e.target))) return;
+    if (calendarPopup.contains(e.target) || (dateFieldWrapper && dateFieldWrapper.contains(e.target))) return;
     closeCalendar();
 });
 
@@ -814,6 +841,7 @@ if (validUntilInput) {
     validUntilInput.addEventListener("change", () => {
         const d = fromISODate(validUntilInput.value);
         if (d) selectedDate = d;
+        updateDateFieldDisplay();
         updatePreview();
     });
 }
@@ -839,6 +867,8 @@ if (resetBtn) {
         if (clientPhoneInput) clientPhoneInput.value = "";
         if (clientEmailInput) clientEmailInput.value = "";
         if (validUntilInput) validUntilInput.value = "";
+        if (validUntilDisplay) validUntilDisplay.value = "";
+        selectedDate = null;
         if (paymentTermsInput) paymentTermsInput.value = "";
         if (notesInput) notesInput.value = "";
         try { localStorage.removeItem(COMPANY_STORAGE_KEY); } catch (e) {}
