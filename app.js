@@ -6,8 +6,10 @@ const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 const resetBtn = document.getElementById("resetBtn");
 const themeToggle = document.getElementById("themeToggle");
 const langToggle = document.getElementById("langToggle");
+
 const THEME_STORAGE_KEY = "kp-theme";
 const LANG_STORAGE_KEY = "kp-lang";
+const COMPANY_STORAGE_KEY = "kp-company-draft";
 
 const translations = {
     ru: {
@@ -28,9 +30,8 @@ const translations = {
         colName: "Наименование услуги / работы",
         colQty: "Кол-во",
         colUnit: "Ед.",
-        colPrice: "Цена, ₽",
-        colSum: "Сумма, ₽",
-        colActions: "",
+        priceLabel: "Цена",
+        sumLabel: "Сумма",
         total: "Итого:",
         conditionsTitle: "Условия и примечания",
         validUntil: "Срок действия КП",
@@ -41,20 +42,15 @@ const translations = {
         previewTitle: "Предпросмотр",
         previewHint: "Так будет выглядеть в PDF",
         forWhom: "Для кого",
-        itemsTitle: "Перечень работ и услуг",
-        conditions: "Условия",
-        regards: "С уважением,",
+        itemsLabel: "Перечень работ и услуг",
+        conditionsLabel: "Условия",
+        regardsLabel: "С уважением,",
         fillCompany: "Заполните название компании",
         fillClient: "Укажите клиента (для кого КП)",
         addPosition: "Добавьте хотя бы одну позицию",
-        noPreview: "Не найден предпросмотр КП",
         pdfError: "Не удалось сформировать PDF. Попробуйте ещё раз.",
         pdfLoadError: "Библиотека html2pdf не загрузилась. Попробуйте открыть файл через локальный сервер (http://127.0.0.1:8080)",
-        docxError: "Библиотека docx не загрузилась. Попробуйте обновить страницу.",
-        pngError: "Библиотека для PNG не загрузилась. Попробуйте обновить страницу.",
-        pngNotFound: "Функция toPng не найдена. Попробуйте обновить страницу.",
         invalidDate: "—",
-        datePlaceholder: "Напр.: 14 дней",
         paymentPlaceholder: "Напр.: 100% предоплата / по договору",
         notesPlaceholder: "Дополнительная информация, гарантия, доставка и др.",
         companyPlaceholder: "ООО «Название»",
@@ -80,12 +76,11 @@ const translations = {
         pdfTitle: "Коммерческое предложение",
         dateLabel: "Дата:",
         validUntilLabel: "Действует до:",
-        companyLabel: "Компания",
         forWhomLabel: "Для кого",
-        itemsLabel: "Перечень работ и услуг",
-        conditionsLabel: "Условия",
-        regardsLabel: "С уважением,",
+        itemsLabelHeader: "Перечень работ и услуг",
+        conditionsLabelHeader: "Условия",
         totalLabel: "Итого:",
+        colNumber: "#",
     },
     en: {
         appTitle: "Commercial Proposal Generator",
@@ -105,9 +100,8 @@ const translations = {
         colName: "Service / Work Description",
         colQty: "Qty",
         colUnit: "Unit",
-        colPrice: "Price, $",
-        colSum: "Total, $",
-        colActions: "",
+        priceLabel: "Price",
+        sumLabel: "Total",
         total: "Total:",
         conditionsTitle: "Terms & Notes",
         validUntil: "Valid Until",
@@ -118,20 +112,15 @@ const translations = {
         previewTitle: "Preview",
         previewHint: "This is how it will look in PDF",
         forWhom: "For Whom",
-        itemsTitle: "Items List",
-        conditions: "Terms",
-        regards: "Best regards,",
+        itemsLabel: "Items List",
+        conditionsLabel: "Terms",
+        regardsLabel: "Best regards,",
         fillCompany: "Fill in company name",
         fillClient: "Specify client (for whom the proposal)",
         addPosition: "Add at least one item",
-        noPreview: "Proposal preview not found",
         pdfError: "Failed to generate PDF. Please try again.",
         pdfLoadError: "html2pdf library not loaded. Try opening via local server (http://127.0.0.1:8080)",
-        docxError: "docx library not loaded. Please refresh the page.",
-        pngError: "PNG library not loaded. Please refresh the page.",
-        pngNotFound: "toPng function not found. Please refresh the page.",
         invalidDate: "—",
-        datePlaceholder: "e.g. 14 days",
         paymentPlaceholder: "e.g. 100% prepayment / per contract",
         notesPlaceholder: "Additional info, warranty, delivery, etc.",
         companyPlaceholder: "LLC «Name»",
@@ -157,19 +146,54 @@ const translations = {
         pdfTitle: "Commercial Proposal",
         dateLabel: "Date:",
         validUntilLabel: "Valid Until:",
-        companyLabel: "Company",
         forWhomLabel: "For Whom",
-        itemsLabel: "Items List",
-        conditionsLabel: "Terms",
-        regardsLabel: "Best regards,",
+        itemsLabelHeader: "Items List",
+        conditionsLabelHeader: "Terms",
         totalLabel: "Total:",
+        colNumber: "#",
     }
 };
 
 let currentLang = "ru";
 
+const companyNameInput = document.getElementById("companyName");
+const companyPhoneInput = document.getElementById("companyPhone");
+const companyEmailInput = document.getElementById("companyEmail");
+const companyInfoInput = document.getElementById("companyInfo");
+const clientNameInput = document.getElementById("clientName");
+const clientPhoneInput = document.getElementById("clientPhone");
+const clientEmailInput = document.getElementById("clientEmail");
+const validUntilInput = document.getElementById("validUntil");
+const validUntilTrigger = document.getElementById("validUntilTrigger");
+const calendarPopup = document.getElementById("calendarPopup");
+const calendarTitle = document.getElementById("calendarTitle");
+const calendarDays = document.getElementById("calendarDays");
+const prevMonthBtn = document.getElementById("prevMonth");
+const nextMonthBtn = document.getElementById("nextMonth");
+const paymentTermsInput = document.getElementById("paymentTerms");
+const notesInput = document.getElementById("notes");
+
+let calendarDate = new Date();
+let selectedDate = null;
+
+const previewCompanyName = document.getElementById("previewCompanyName");
+const previewCompanyPhone = document.getElementById("previewCompanyPhone");
+const previewCompanyEmail = document.getElementById("previewCompanyEmail");
+const previewCompanyInfo = document.getElementById("previewCompanyInfo");
+const previewFooterCompany = document.getElementById("previewFooterCompany");
+const previewClientName = document.getElementById("previewClientName");
+const previewClientPhone = document.getElementById("previewClientPhone");
+const previewClientEmail = document.getElementById("previewClientEmail");
+const previewDate = document.getElementById("previewDate");
+const previewValidUntil = document.getElementById("previewValidUntil");
+const previewItemsBody = document.getElementById("previewItemsBody");
+const previewTotalSum = document.getElementById("previewTotalSum");
+const previewPaymentTerms = document.getElementById("previewPaymentTerms");
+const previewNotes = document.getElementById("previewNotes");
+const previewConditions = document.getElementById("previewConditions");
+
 function getTranslation(key) {
-    return translations[currentLang][key] || translations.ru[key] || key;
+    return (translations[currentLang] && translations[currentLang][key]) || (translations.ru && translations.ru[key]) || key;
 }
 
 function setLanguage(lang) {
@@ -197,293 +221,84 @@ function updateLangToggle() {
 function updateAllTexts() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
-        el.textContent = getTranslation(key);
-    });
-
-    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-        const key = el.getAttribute("data-i18n-placeholder");
-        el.placeholder = getTranslation(key);
-    });
-
-    document.querySelectorAll("[data-i18n-aria]").forEach(el => {
-        const key = el.getAttribute("data-i18n-aria");
-        el.setAttribute("aria-label", getTranslation(key));
-    });
-
-    document.querySelectorAll("[data-i18n-title]").forEach(el => {
-        const key = el.getAttribute("data-i18n-title");
-        el.title = getTranslation(key);
-    });
-
-    if (calendarPopup && calendarPopup.classList.contains("open")) {
-        renderCalendar();
-    }
-
-    updatePreview();
-}
-
-function initLanguage() {
-    const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
-    const prefersRu = navigator.language.startsWith("ru");
-    const lang = savedLang || (prefersRu ? "ru" : "en");
-    currentLang = lang;
-    document.documentElement.setAttribute("lang", lang);
-    updateLangToggle();
-}
-
-
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-}
-
-function toggleLanguage() {
-    const newLang = currentLang === "ru" ? "en" : "ru";
-    setLanguage(newLang);
-}
-
-function updateLangToggle() {
-    if (langToggle) {
-        const langCurrent = document.getElementById("langCurrent");
-        if (langCurrent) {
-            langCurrent.textContent = currentLang.toUpperCase();
+        const translation = getTranslation(key);
+        if (el.children.length === 0) {
+            el.textContent = translation;
         }
-    }
-}
-
-function updateAllTexts() {
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        el.textContent = getTranslation(key);
     });
-
     document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
         const key = el.getAttribute("data-i18n-placeholder");
-        el.placeholder = getTranslation(key);
+        if (key) el.placeholder = getTranslation(key);
     });
-
     document.querySelectorAll("[data-i18n-aria]").forEach(el => {
         const key = el.getAttribute("data-i18n-aria");
-        el.setAttribute("aria-label", getTranslation(key));
+        if (key) el.setAttribute("aria-label", getTranslation(key));
     });
-
     document.querySelectorAll("[data-i18n-title]").forEach(el => {
         const key = el.getAttribute("data-i18n-title");
-        el.title = getTranslation(key);
+        if (key) el.title = getTranslation(key);
     });
-
     if (calendarPopup && calendarPopup.classList.contains("open")) {
         renderCalendar();
     }
-
     updatePreview();
-}
-
-function initLanguage() {
-    const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
-    const prefersRu = navigator.language.startsWith("ru");
-    const lang = savedLang || (prefersRu ? "ru" : "en");
-    currentLang = lang;
-    document.documentElement.setAttribute("lang", lang);
-    updateLangToggle();
-}
-
-
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-}
-
-function toggleLanguage() {
-    const newLang = currentLang === "ru" ? "en" : "ru";
-    setLanguage(newLang);
-}
-
-function updateLangToggle() {
-    if (langToggle) {
-        const langCurrent = document.getElementById("langCurrent");
-        if (langCurrent) {
-            langCurrent.textContent = currentLang.toUpperCase();
-        }
-    }
-}
-
-function updateAllTexts() {
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        el.textContent = getTranslation(key);
-    });
-
-    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-        const key = el.getAttribute("data-i18n-placeholder");
-        el.placeholder = getTranslation(key);
-    });
-
-    document.querySelectorAll("[data-i18n-aria]").forEach(el => {
-        const key = el.getAttribute("data-i18n-aria");
-        el.setAttribute("aria-label", getTranslation(key));
-    });
-
-    document.querySelectorAll("[data-i18n-title]").forEach(el => {
-        const key = el.getAttribute("data-i18n-title");
-        el.title = getTranslation(key);
-    });
-
-    if (calendarPopup && calendarPopup.classList.contains("open")) {
-        renderCalendar();
-    }
-
-    updatePreview();
-}
-
-function initLanguage() {
-    const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
-    const prefersRu = navigator.language.startsWith("ru");
-    const lang = savedLang || (prefersRu ? "ru" : "en");
-    currentLang = lang;
-    document.documentElement.setAttribute("lang", lang);
-    updateLangToggle();
-}
-
-
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-}
-
-function toggleLanguage() {
-    const newLang = currentLang === "ru" ? "en" : "ru";
-    setLanguage(newLang);
-}
-
-function updateLangToggle() {
-    if (langToggle) {
-        const langCurrent = document.getElementById("langCurrent");
-        if (langCurrent) {
-            langCurrent.textContent = currentLang.toUpperCase();
-        }
-    }
-}
-
-function updateAllTexts() {
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        el.textContent = getTranslation(key);
-    });
-
-    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-        const key = el.getAttribute("data-i18n-placeholder");
-        el.placeholder = getTranslation(key);
-    });
-
-    document.querySelectorAll("[data-i18n-aria]").forEach(el => {
-        const key = el.getAttribute("data-i18n-aria");
-        el.setAttribute("aria-label", getTranslation(key));
-    });
-
-    document.querySelectorAll("[data-i18n-title]").forEach(el => {
-        const key = el.getAttribute("data-i18n-title");
-        el.title = getTranslation(key);
-    });
-
-    if (calendarPopup && calendarPopup.classList.contains("open")) {
-        renderCalendar();
-    }
-
-    updatePreview();
-}
-
-function initLanguage() {
-    const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
-    const prefersRu = navigator.language.startsWith("ru");
-    const lang = savedLang || (prefersRu ? "ru" : "en");
-    currentLang = lang;
-    document.documentElement.setAttribute("lang", lang);
-    updateLangToggle();
-}
-
-function initTheme() {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const theme = savedTheme || (prefersDark ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", theme);
-}
-
-if (themeToggle) {
-    themeToggle.addEventListener("click", toggleTheme);
-}
-if (langToggle) {
-    langToggle.addEventListener("click", toggleLanguage);
-}
-
-initTheme();
-initLanguage();
-
-function saveCompanyData() {
-    const data = {
-        companyName: companyNameInput ? companyNameInput.value : "",
-        companyPhone: companyPhoneInput ? companyPhoneInput.value : "",
-        companyEmail: companyEmailInput ? companyEmailInput.value : "",
-        companyInfo: companyInfoInput ? companyInfoInput.value : "",
-    };
-    try {
-        localStorage.setItem(COMPANY_STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-        console.warn("Не удалось сохранить черновик компании:", e);
-    }
 }
 
 function loadCompanyData() {
     try {
         const saved = localStorage.getItem(COMPANY_STORAGE_KEY);
-        if (saved) {
-            const data = JSON.parse(saved);
-            if (companyNameInput && data.companyName) companyNameInput.value = data.companyName;
-            if (companyPhoneInput && data.companyPhone) companyPhoneInput.value = data.companyPhone;
-            if (companyEmailInput && data.companyEmail) companyEmailInput.value = data.companyEmail;
-            if (companyInfoInput && data.companyInfo) companyInfoInput.value = data.companyInfo;
-        }
+        if (!saved) return;
+        const data = JSON.parse(saved);
+        if (companyNameInput && data.companyName !== undefined) companyNameInput.value = data.companyName;
+        if (companyPhoneInput && data.companyPhone !== undefined) companyPhoneInput.value = data.companyPhone;
+        if (companyEmailInput && data.companyEmail !== undefined) companyEmailInput.value = data.companyEmail;
+        if (companyInfoInput && data.companyInfo !== undefined) companyInfoInput.value = data.companyInfo;
     } catch (e) {
-        console.warn("Не удалось загрузить черновик компании:", e);
+        // ignore
     }
 }
 
-function clearCompanyData() {
+function saveCompanyData() {
     try {
-        localStorage.removeItem(COMPANY_STORAGE_KEY);
+        const data = {
+            companyName: companyNameInput ? companyNameInput.value : "",
+            companyPhone: companyPhoneInput ? companyPhoneInput.value : "",
+            companyEmail: companyEmailInput ? companyEmailInput.value : "",
+            companyInfo: companyInfoInput ? companyInfoInput.value : ""
+        };
+        localStorage.setItem(COMPANY_STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
-        console.warn("Не удалось удалить черновик компании:", e);
+        // ignore
     }
 }
 
-const previewCompanyName = document.getElementById("previewCompanyName");
-const previewCompanyPhone = document.getElementById("previewCompanyPhone");
-const previewCompanyEmail = document.getElementById("previewCompanyEmail");
-const previewCompanyInfo = document.getElementById("previewCompanyInfo");
-const previewFooterCompany = document.getElementById("previewFooterCompany");
+function initLanguage() {
+    const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
+    const prefersRu = navigator.language && navigator.language.startsWith("ru");
+    currentLang = savedLang || (prefersRu ? "ru" : "en");
+    document.documentElement.setAttribute("lang", currentLang);
+    updateLangToggle();
+}
 
-const previewClientName = document.getElementById("previewClientName");
-const previewClientPhone = document.getElementById("previewClientPhone");
-const previewClientEmail = document.getElementById("previewClientEmail");
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+}
 
-const previewDate = document.getElementById("previewDate");
-const previewValidUntil = document.getElementById("previewValidUntil");
+function initTheme() {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = savedTheme || (prefersDark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+}
 
-const previewItemsBody = document.getElementById("previewItemsBody");
-const previewTotalSum = document.getElementById("previewTotalSum");
+if (themeToggle) themeToggle.addEventListener("click", toggleTheme);
+if (langToggle) langToggle.addEventListener("click", toggleLanguage);
 
-const previewPaymentTerms = document.getElementById("previewPaymentTerms");
-const previewNotes = document.getElementById("previewNotes");
-const previewConditions = document.getElementById("previewConditions");
+initTheme();
+initLanguage();
 
 const formatter = new Intl.NumberFormat("ru-RU");
 
@@ -511,10 +326,7 @@ function setText(el, value, placeholder = "") {
 
 function updateDate() {
     const now = new Date();
-    const dateStr = now.toLocaleDateString(getTranslation("dateFormat"));
-    if (previewDate) {
-        previewDate.textContent = dateStr;
-    }
+    if (previewDate) previewDate.textContent = now.toLocaleDateString(getTranslation("dateFormat"));
 }
 
 function createRow() {
@@ -541,9 +353,7 @@ function createRow() {
         const qty = parseNumber(qtyInput && qtyInput.value);
         const price = parseNumber(priceInput && priceInput.value);
         const sum = qty * price;
-        if (sumEl) {
-            sumEl.textContent = formatCurrency(sum);
-        }
+        if (sumEl) sumEl.textContent = `${formatter.format(Math.max(sum, 0))} ${getTranslation("currency")}`;
         updatePreview();
     };
 
@@ -570,20 +380,8 @@ function updatePreview() {
     const companyEmail = companyEmailInput ? companyEmailInput.value : "";
     const companyInfo = companyInfoInput ? companyInfoInput.value : "";
 
-    if (previewCompanyName) {
-        if (companyName.trim() === "") {
-            previewCompanyName.textContent = getTranslation("companyNamePreview");
-        } else {
-            previewCompanyName.textContent = companyName;
-        }
-    }
-    if (previewFooterCompany) {
-        if (companyName.trim() === "") {
-            previewFooterCompany.textContent = getTranslation("companyNamePreview");
-        } else {
-            previewFooterCompany.textContent = companyName;
-        }
-    }
+    if (previewCompanyName) previewCompanyName.textContent = companyName.trim() === "" ? getTranslation("companyNamePreview") : companyName;
+    if (previewFooterCompany) previewFooterCompany.textContent = companyName.trim() === "" ? getTranslation("companyNamePreview") : companyName;
 
     setText(previewCompanyPhone, companyPhone);
     setText(previewCompanyEmail, companyEmail);
@@ -593,13 +391,7 @@ function updatePreview() {
     const clientPhone = clientPhoneInput ? clientPhoneInput.value : "";
     const clientEmail = clientEmailInput ? clientEmailInput.value : "";
 
-    if (previewClientName) {
-        if (clientName.trim() === "") {
-            previewClientName.textContent = getTranslation("clientNamePreview");
-        } else {
-            previewClientName.textContent = clientName;
-        }
-    }
+    if (previewClientName) previewClientName.textContent = clientName.trim() === "" ? getTranslation("clientNamePreview") : clientName;
     setText(previewClientPhone, clientPhone);
     setText(previewClientEmail, clientEmail);
 
@@ -609,12 +401,8 @@ function updatePreview() {
             previewValidUntil.textContent = getTranslation("invalidDate");
         } else {
             try {
-                const dateObj = new Date(validUntil + "T00:00:00");
-                if (isNaN(dateObj.getTime())) {
-                    previewValidUntil.textContent = validUntil;
-                } else {
-                    previewValidUntil.textContent = dateObj.toLocaleDateString(getTranslation("dateFormat"));
-                }
+                const d = new Date(validUntil + "T00:00:00");
+                previewValidUntil.textContent = isNaN(d.getTime()) ? validUntil : d.toLocaleDateString(getTranslation("dateFormat"));
             } catch (e) {
                 previewValidUntil.textContent = validUntil;
             }
@@ -637,7 +425,7 @@ function updatePreview() {
 
     previewItemsBody.innerHTML = "";
     let total = 0;
-    const rows = itemsBody.querySelectorAll ? itemsBody.querySelectorAll(".item-row") : [];
+    const rows = itemsBody ? itemsBody.querySelectorAll(".item-row") : [];
 
     rows.forEach((row, index) => {
         const nameInputEl = row.querySelector(".item-input--name");
@@ -681,12 +469,8 @@ function updatePreview() {
         previewItemsBody.appendChild(tr);
     });
 
-    if (totalSumEl) {
-        totalSumEl.textContent = formatCurrency(total);
-    }
-    if (previewTotalSum) {
-        previewTotalSum.textContent = formatCurrency(total);
-    }
+    if (totalSumEl) totalSumEl.textContent = formatCurrency(total);
+    if (previewTotalSum) previewTotalSum.textContent = formatCurrency(total);
 }
 
 function downloadPdf() {
@@ -700,12 +484,12 @@ function downloadPdf() {
     const rows = itemsBody ? itemsBody.querySelectorAll(".item-row") : [];
     let hasPosition = false;
     const items = [];
+
     rows.forEach((row) => {
         const nameInput = row.querySelector(".item-input--name");
         const qtyInput = row.querySelector(".item-input--qty");
         const unitInput = row.querySelector(".item-input--unit");
         const priceInput = row.querySelector(".item-input--price");
-
         const name = nameInput ? nameInput.value.trim() : "";
         const parseNumber = (val) => {
             if (!val) return 0;
@@ -717,28 +501,26 @@ function downloadPdf() {
         const unit = unitInput ? unitInput.value.trim() : "";
         const price = parseNumber(priceInput && priceInput.value);
         const sum = qty * price;
-
         if (name !== "") hasPosition = true;
         items.push({ name, qty, unit, price, sum });
     });
 
     if (!companyName) {
         alert(getTranslation("fillCompany"));
-        companyNameInput.focus();
+        if (companyNameInput) companyNameInput.focus();
         return;
     }
     if (!clientName) {
         alert(getTranslation("fillClient"));
-        clientNameInput.focus();
+        if (clientNameInput) clientNameInput.focus();
         return;
     }
     if (!hasPosition) {
         alert(getTranslation("addPosition"));
-        addRowBtn.focus();
+        if (addRowBtn) addRowBtn.focus();
         return;
     }
 
-    // Build PDF HTML with completely independent styles
     const pdfHtml = buildPdfHtml({
         companyName: companyNameInput ? companyNameInput.value : "",
         companyPhone: companyPhoneInput ? companyPhoneInput.value : "",
@@ -753,7 +535,6 @@ function downloadPdf() {
         items
     });
 
-    // Create hidden wrapper for rendering
     const wrapper = document.createElement("div");
     wrapper.style.position = "fixed";
     wrapper.style.left = "-20000px";
@@ -769,8 +550,6 @@ function downloadPdf() {
 
     wrapper.innerHTML = pdfHtml;
     document.body.appendChild(wrapper);
-
-    const element = wrapper.firstElementChild;
 
     const opt = {
         margin: 0,
@@ -790,7 +569,7 @@ function downloadPdf() {
             .from(wrapper.firstElementChild)
             .save()
             .then(() => {
-                document.body.removeChild(wrapper);
+                if (wrapper.parentNode) document.body.removeChild(wrapper);
                 window.scrollTo(0, prevScrollY);
             })
             .catch((err) => {
@@ -832,9 +611,9 @@ function buildPdfHtml(data) {
         itemsHtml += `
             <tr style="background:${bg};">
                 <td style="padding:10px 14px;border:1px solid #eceef7;text-align:center;">${index + 1}</td>
-                <td style="padding:10px 14px;border:1px solid #eceef7;">${item.name || "—"}</td>
+                <td style="padding:10px 14px;border:1px solid #eceef7;">${(item.name || "—").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                 <td style="padding:10px 14px;border:1px solid #eceef7;text-align:right;">${item.qty}</td>
-                <td style="padding:10px 14px;border:1px solid #eceef7;text-align:center;">${item.unit || "—"}</td>
+                <td style="padding:10px 14px;border:1px solid #eceef7;text-align:center;">${(item.unit || "—").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                 <td style="padding:10px 14px;border:1px solid #eceef7;text-align:right;">${formatCurrency(item.price)}</td>
                 <td style="padding:10px 14px;border:1px solid #eceef7;text-align:right;">${formatCurrency(item.qty * item.price)}</td>
             </tr>
@@ -844,60 +623,45 @@ function buildPdfHtml(data) {
     const total = items.reduce((acc, it) => acc + it.qty * it.price, 0);
 
     return `
-    <div style="
-        width: 210mm;
-        min-height: 297mm;
-        background: #ffffff;
-        color: #1f2430;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        font-size: 12px;
-        line-height: 1.5;
-        padding: 18mm 16mm 20mm;
-        box-sizing: border-box;
-        box-shadow: none;
-    ">
+    <div style="width:210mm;min-height:297mm;background:#ffffff;color:#1f2430;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;padding:18mm 16mm 20mm;box-sizing:border-box;">
         <header style="display:flex;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap;">
             <div>
-                <div style="font-size:18px;font-weight:600;">${data.companyName}</div>
+                <div style="font-size:18px;font-weight:600;">${(companyName || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
                 <div style="margin-top:6px;color:#4f5568;font-size:12px;display:flex;flex-direction:column;gap:2px;">
-                    ${data.companyPhone ? `<div>${data.companyPhone}</div>` : ""}
-                    ${data.companyEmail ? `<div>${data.companyEmail}</div>` : ""}
-                    ${data.companyInfo ? `<div>${data.companyInfo}</div>` : ""}
+                    ${companyPhone ? `<div>${(companyPhone).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
+                    ${companyEmail ? `<div>${(companyEmail).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
+                    ${companyInfo ? `<div>${(companyInfo).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
                 </div>
             </div>
             <div style="text-align:right;display:flex;flex-direction:column;gap:4px;color:#4f5568;font-size:12px;">
                 <div>${getTranslation("pdfTitle")}</div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;"><span>${getTranslation("dateLabel")}</span><span>${new Date().toLocaleDateString(getTranslation("dateFormat"))}</span></div>
-                <div style="display:flex;gap:10px;justify-content:flex-end;"><span>${getTranslation("validUntilLabel")}</span><span>${formatDate(data.validUntil)}</span></div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;"><span>${getTranslation("validUntilLabel")}</span><span>${formatDate(validUntil)}</span></div>
             </div>
         </header>
-
         <section style="margin-bottom:22px;">
             <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">${getTranslation("forWhomLabel")}</div>
             <div style="display:flex;flex-direction:column;gap:2px;">
-                <div>${data.clientName || "—"}</div>
-                ${data.clientPhone ? `<div>${data.clientPhone}</div>` : ""}
-                ${data.clientEmail ? `<div>${data.clientEmail}</div>` : ""}
+                <div>${(clientName || "—").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                ${clientPhone ? `<div>${(clientPhone).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
+                ${clientEmail ? `<div>${(clientEmail).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
             </div>
         </section>
-
         <section style="margin-bottom:22px;">
-            <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">${getTranslation("itemsLabel")}</div>
+            <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">${getTranslation("itemsLabelHeader")}</div>
             <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;min-width:640px;font-size:11px;">
                     <thead>
                         <tr>
-                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:7%;text-align:center;">#</th>
-                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:47%;">${getTranslation("colName")}</th>
-                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:10%;text-align:right;">${getTranslation("colQty")}</th>
-                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:9%;text-align:center;">${getTranslation("colUnit")}</th>
-                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:13%;text-align:right;">${getTranslation("colPrice")}</th>
-                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;width:14%;text-align:right;">${getTranslation("colSum")}</th>
+                            <th style="text-align:center;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">#</th>
+                            <th style="text-align:left;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("colName")}</th>
+                            <th style="text-align:right;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("colQty")}</th>
+                            <th style="text-align:center;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("colUnit")}</th>
+                            <th style="text-align:right;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("priceLabel")}, ${getTranslation("currency")}</th>
+                            <th style="text-align:right;background:#f5f6fa;color:#4f5568;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px;border:1px solid #d7dbe8;">${getTranslation("sumLabel")}, ${getTranslation("currency")}</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${itemsHtml}
-                    </tbody>
+                    <tbody>${itemsHtml}</tbody>
                 </table>
             </div>
             <div style="display:flex;justify-content:flex-end;gap:16px;margin-top:10px;font-size:14px;">
@@ -905,282 +669,22 @@ function buildPdfHtml(data) {
                 <strong>${new Intl.NumberFormat(getTranslation("dateFormat")).format(total)} ${getTranslation("currency")}</strong>
             </div>
         </section>
-
-        ${(data.paymentTerms || data.notes) ? `
+        ${(paymentTerms || notes) ? `
         <section style="margin-bottom:22px;">
-            <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">${getTranslation("conditionsLabel")}</div>
+            <div style="font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px;color:#6b728e;margin-bottom:16px;">${getTranslation("conditionsLabelHeader") || getTranslation("conditionsLabel")}</div>
             <div style="display:flex;flex-direction:column;gap:6px;color:#4f5568;font-size:12px;">
-                ${data.paymentTerms ? `<div><strong>${getTranslation("paymentTerms")}:</strong> ${data.paymentTerms}</div>` : ""}
-                ${data.notes ? `<div><strong>${getTranslation("notes")}:</strong> ${data.notes}</div>` : ""}
+                ${paymentTerms ? `<div><strong>${getTranslation("paymentTerms")}:</strong> ${(paymentTerms).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
+                ${notes ? `<div><strong>${getTranslation("notes")}:</strong> ${(notes).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
             </div>
         </section>
         ` : ""}
-
         <footer style="margin-top:30px;display:flex;flex-direction:column;gap:4px;font-size:12px;">
             <div>${getTranslation("regardsLabel")}</div>
-            <div style="font-weight:600;">${data.companyName || getTranslation("companyNamePreview")}</div>
+            <div style="font-weight:600;">${(companyName || getTranslation("companyNamePreview")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
         </footer>
     </div>
     `;
 }
-
-function downloadDocx() {
-    if (typeof window.docx === "undefined") {
-        if (typeof docx !== "undefined") window.docx = docx;
-        else if (typeof window.docxlib !== "undefined") window.docx = window.docxlib;
-    }
-    if (typeof window.docx === "undefined") {
-        alert(getTranslation("docxError"));
-        return;
-    }
-    const docxLib = window.docx;
-    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType } = docxLib;
-    const data = collectKpData();
-
-    const companyLines = [];
-    if (data.companyName) companyLines.push(data.companyName);
-    if (data.companyPhone) companyLines.push("Тел.: " + data.companyPhone);
-    if (data.companyEmail) companyLines.push("E-mail: " + data.companyEmail);
-    if (data.companyInfo) companyLines.push(data.companyInfo);
-
-    const clientLines = [];
-    if (data.clientName) clientLines.push(data.clientName);
-    if (data.clientPhone) clientLines.push("Тел.: " + data.clientPhone);
-    if (data.clientEmail) clientLines.push("E-mail: " + data.clientEmail);
-
-    const doc = new Document({
-        sections: [
-            {
-                properties: {},
-                children: [
-                    new Paragraph({
-                        text: getTranslation("pdfTitle"),
-                        heading: HeadingLevel.HEADING_1,
-                        alignment: AlignmentType.CENTER,
-                    }),
-                    new Paragraph({
-                        children: [
-                            new TextRun({ text: getTranslation("dateLabel") + " ", bold: true }),
-                            new TextRun(new Date().toLocaleDateString(getTranslation("dateFormat"))),
-                        ],
-                    }),
-                    new Paragraph({
-                        children: [
-                            new TextRun({ text: getTranslation("validUntilLabel") + " ", bold: true }),
-                            new TextRun(data.validUntil ? new Date(data.validUntil + "T00:00:00").toLocaleDateString(getTranslation("dateFormat")) : getTranslation("invalidDate")),
-                        ],
-                    }),
-                    new Paragraph({ text: "" }),
-                    new Paragraph({
-                        children: [new TextRun({ text: getTranslation("companyLabel"), bold: true })],
-                    }),
-                    ...companyLines.map((line) => new Paragraph({ text: line })),
-                    new Paragraph({ text: "" }),
-                    new Paragraph({
-                        children: [new TextRun({ text: getTranslation("forWhomLabel"), bold: true })],
-                    }),
-                    ...clientLines.map((line) => new Paragraph({ text: line })),
-                    new Paragraph({ text: "" }),
-                    new Paragraph({
-                        children: [new TextRun({ text: getTranslation("itemsLabel"), bold: true })],
-                    }),
-                    new Table({
-                        rows: [
-                            new TableRow({
-                                children: [
-                                    new TableCell({ children: [new Paragraph({ text: "#", alignment: AlignmentType.CENTER })] }),
-                                    new TableCell({ children: [new Paragraph({ text: getTranslation("colName") })] }),
-                                    new TableCell({ children: [new Paragraph({ text: getTranslation("colQty"), alignment: AlignmentType.RIGHT })] }),
-                                    new TableCell({ children: [new Paragraph({ text: getTranslation("colUnit"), alignment: AlignmentType.CENTER })] }),
-                                    new TableCell({ children: [new Paragraph({ text: getTranslation("colPrice") + ", " + getTranslation("currency"), alignment: AlignmentType.RIGHT })] }),
-                                    new TableCell({ children: [new Paragraph({ text: getTranslation("colSum") + ", " + getTranslation("currency"), alignment: AlignmentType.RIGHT })] }),
-                                ],
-                            }),
-                            ...data.items.map((it, idx) =>
-                                new TableRow({
-                                    children: [
-                                        new TableCell({ children: [new Paragraph({ text: String(idx + 1), alignment: AlignmentType.CENTER })] }),
-                                        new TableCell({ children: [new Paragraph({ text: it.name || "—" })] }),
-                                        new TableCell({ children: [new Paragraph({ text: String(it.qty), alignment: AlignmentType.RIGHT })] }),
-                                        new TableCell({ children: [new Paragraph({ text: it.unit || "—", alignment: AlignmentType.CENTER })] }),
-                                        new TableCell({ children: [new Paragraph({ text: new Intl.NumberFormat(getTranslation("dateFormat")).format(it.price), alignment: AlignmentType.RIGHT })] }),
-                                        new TableCell({ children: [new Paragraph({ text: new Intl.NumberFormat(getTranslation("dateFormat")).format(it.sum), alignment: AlignmentType.RIGHT })] }),
-                                    ],
-                                })
-                            ),
-                            new TableRow({
-                                children: [
-                                    new TableCell({ children: [new Paragraph({ text: "" })] }),
-                                    new TableCell({ children: [new Paragraph({ text: getTranslation("totalLabel"), bold: true })] }),
-                                    new TableCell({ children: [new Paragraph({ text: "" })] }),
-                                    new TableCell({ children: [new Paragraph({ text: "" })] }),
-                                    new TableCell({ children: [new Paragraph({ text: "" })] }),
-                                    new TableCell({ children: [new Paragraph({ text: new Intl.NumberFormat(getTranslation("dateFormat")).format(data.total) + " " + getTranslation("currency"), bold: true, alignment: AlignmentType.RIGHT })] }),
-                                ],
-                            }),
-                        ],
-                    }),
-                    new Paragraph({ text: "" }),
-                    data.paymentTerms
-                        ? new Paragraph({
-                            children: [new TextRun({ text: getTranslation("paymentTerms") + ": ", bold: true }), new TextRun(data.paymentTerms)],
-                        })
-                        : new Paragraph({}),
-                    data.notes
-                        ? new Paragraph({
-                            children: [new TextRun({ text: getTranslation("notes") + ": ", bold: true }), new TextRun(data.notes)],
-                        })
-                        : new Paragraph({}),
-                    new Paragraph({ text: "" }),
-                    new Paragraph({ text: getTranslation("regardsLabel") }),
-                    new Paragraph({ text: data.companyName || getTranslation("companyNamePreview") }),
-                ],
-            },
-        ],
-    });
-
-    Packer.toBlob(doc).then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "kommercheskoe-predlozhenie.docx";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }).catch((err) => {
-        console.error(err);
-        alert(getTranslation("docxError"));
-    });
-}
-
-function downloadPng() {
-    const element = document.getElementById("kpPreview");
-    if (!element) {
-        alert(getTranslation("noPreview"));
-        return;
-    }
-    const prevScrollY = window.scrollY || 0;
-    window.scrollTo(0, 0);
-
-    const finish = (dataUrl) => {
-        const a = document.createElement("a");
-        a.href = dataUrl;
-        a.download = "kommercheskoe-predlozhenie.png";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.scrollTo(0, prevScrollY);
-    };
-
-    if (typeof window.html2canvas === "function") {
-        window.html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" })
-            .then((canvas) => {
-                finish(canvas.toDataURL("image/png"));
-            })
-            .catch((err) => {
-                console.error(err);
-                window.scrollTo(0, prevScrollY);
-                alert(getTranslation("pngError"));
-            });
-        return;
-    }
-
-    if (typeof window.htmlToImage === "undefined" && typeof htmlToImage !== "undefined") {
-        window.htmlToImage = htmlToImage;
-    }
-    if (typeof window.htmlToImage === "undefined") {
-        alert(getTranslation("pngError"));
-        window.scrollTo(0, prevScrollY);
-        return;
-    }
-    const lib = window.htmlToImage;
-    const fn = lib.toPng || (lib.default && lib.default.toPng);
-    if (typeof fn !== "function") {
-        alert(getTranslation("pngNotFound"));
-        window.scrollTo(0, prevScrollY);
-        return;
-    }
-    fn(element, { pixelRatio: 2, cacheBust: true, backgroundColor: "#ffffff" })
-        .then(finish)
-        .catch((err) => {
-            console.error(err);
-            window.scrollTo(0, prevScrollY);
-            alert(getTranslation("pngError"));
-        });
-}
-
-function collectKpData() {
-    const companyName = companyNameInput ? companyNameInput.value : "";
-    const companyPhone = companyPhoneInput ? companyPhoneInput.value : "";
-    const companyEmail = companyEmailInput ? companyEmailInput.value : "";
-    const companyInfo = companyInfoInput ? companyInfoInput.value : "";
-
-    const clientName = clientNameInput ? clientNameInput.value : "";
-    const clientPhone = clientPhoneInput ? clientPhoneInput.value : "";
-    const clientEmail = clientEmailInput ? clientEmailInput.value : "";
-
-    const validUntil = validUntilInput ? validUntilInput.value : "";
-    const paymentTerms = paymentTermsInput ? paymentTermsInput.value : "";
-    const notes = notesInput ? notesInput.value : "";
-
-    const rows = itemsBody ? itemsBody.querySelectorAll(".item-row") : [];
-    const items = [];
-    rows.forEach((row) => {
-        const nameInputEl = row.querySelector(".item-input--name");
-        const qtyInputEl = row.querySelector(".item-input--qty");
-        const unitInputEl = row.querySelector(".item-input--unit");
-        const priceInputEl = row.querySelector(".item-input--price");
-        const name = nameInputEl ? nameInputEl.value.trim() : "";
-        const parseNumber = (val) => {
-            if (!val) return 0;
-            const normalized = val.toString().replace(",", ".");
-            const num = parseFloat(normalized);
-            return isNaN(num) ? 0 : num;
-        };
-        const qty = parseNumber(qtyInputEl && qtyInputEl.value);
-        const unit = unitInputEl ? unitInputEl.value.trim() : "";
-        const price = parseNumber(priceInputEl && priceInputEl.value);
-        const sum = qty * price;
-        items.push({ name, qty, unit, price, sum });
-    });
-
-    const total = items.reduce((acc, it) => acc + it.sum, 0);
-    return { companyName, companyPhone, companyEmail, companyInfo, clientName, clientPhone, clientEmail, validUntil, paymentTerms, notes, items, total };
-}
-
-function resetForm() {
-    if (companyNameInput) companyNameInput.value = "";
-    if (companyPhoneInput) companyPhoneInput.value = "";
-    if (companyEmailInput) companyEmailInput.value = "";
-    if (companyInfoInput) companyInfoInput.value = "";
-
-    if (clientNameInput) clientNameInput.value = "";
-    if (clientPhoneInput) clientPhoneInput.value = "";
-    if (clientEmailInput) clientEmailInput.value = "";
-
-    if (validUntilInput) validUntilInput.value = "";
-    if (paymentTermsInput) paymentTermsInput.value = "";
-    if (notesInput) notesInput.value = "";
-
-    if (itemsBody) {
-        itemsBody.innerHTML = "";
-    }
-    clearCompanyData();
-    createRow();
-    updateDate();
-    updatePreview();
-}
-
-if (addRowBtn) {
-    addRowBtn.addEventListener("click", () => {
-        createRow();
-        updatePreview();
-    });
-}
-
-const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-const weekdayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 function toISODate(d) {
     if (!d) return "";
@@ -1202,6 +706,11 @@ function fromISODate(s) {
 function renderCalendar() {
     if (!calendarDays || !calendarTitle) return;
     calendarTitle.textContent = `${getTranslation("months")[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
+    const weekdaySpans = document.querySelectorAll('.calendar-weekdays span');
+    const weekdays = getTranslation('weekdays') || ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    weekdaySpans.forEach((el, idx) => {
+        if (weekdays[idx]) el.textContent = weekdays[idx];
+    });
     calendarDays.innerHTML = "";
 
     const firstDay = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1);
@@ -1214,7 +723,6 @@ function renderCalendar() {
         const empty = document.createElement("button");
         empty.type = "button";
         empty.className = "calendar-day other-month disabled";
-        empty.textContent = "";
         empty.disabled = true;
         calendarDays.appendChild(empty);
     }
@@ -1225,19 +733,15 @@ function renderCalendar() {
         btn.className = "calendar-day";
         btn.textContent = day;
         const dateObj = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day);
-        if (dateObj.getTime() === today.getTime()) {
-            btn.classList.add("today");
-        }
-        if (selectedDate && dateObj.getTime() === selectedDate.getTime()) {
-            btn.classList.add("selected");
-        }
+        if (dateObj.getTime() === today.getTime()) btn.classList.add("today");
+        if (selectedDate && dateObj.getTime() === selectedDate.getTime()) btn.classList.add("selected");
         btn.addEventListener("click", () => {
             selectedDate = dateObj;
             if (validUntilInput) {
                 validUntilInput.value = toISODate(dateObj);
                 validUntilInput.dispatchEvent(new Event("change", { bubbles: true }));
             }
-            calendarPopup.classList.remove("open");
+            if (calendarPopup) calendarPopup.classList.remove("open");
             updatePreview();
         });
         calendarDays.appendChild(btn);
@@ -1249,7 +753,6 @@ function renderCalendar() {
         const empty = document.createElement("button");
         empty.type = "button";
         empty.className = "calendar-day other-month disabled";
-        empty.textContent = "";
         empty.disabled = true;
         calendarDays.appendChild(empty);
     }
@@ -1271,15 +774,13 @@ function openCalendar() {
 }
 
 function closeCalendar() {
-    if (calendarPopup) {
-        calendarPopup.classList.remove("open");
-    }
+    if (calendarPopup) calendarPopup.classList.remove("open");
 }
 
 if (validUntilTrigger) {
     validUntilTrigger.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (calendarPopup.classList.contains("open")) {
+        if (calendarPopup && calendarPopup.classList.contains("open")) {
             closeCalendar();
         } else {
             openCalendar();
@@ -1312,9 +813,14 @@ document.addEventListener("click", (e) => {
 if (validUntilInput) {
     validUntilInput.addEventListener("change", () => {
         const d = fromISODate(validUntilInput.value);
-        if (d) {
-            selectedDate = d;
-        }
+        if (d) selectedDate = d;
+        updatePreview();
+    });
+}
+
+if (addRowBtn) {
+    addRowBtn.addEventListener("click", () => {
+        createRow();
         updatePreview();
     });
 }
@@ -1322,11 +828,60 @@ if (validUntilInput) {
 if (downloadPdfBtn) {
     downloadPdfBtn.addEventListener("click", downloadPdf);
 }
+
 if (resetBtn) {
-    resetBtn.addEventListener("click", resetForm);
+    resetBtn.addEventListener("click", () => {
+        if (companyNameInput) companyNameInput.value = "";
+        if (companyPhoneInput) companyPhoneInput.value = "";
+        if (companyEmailInput) companyEmailInput.value = "";
+        if (companyInfoInput) companyInfoInput.value = "";
+        if (clientNameInput) clientNameInput.value = "";
+        if (clientPhoneInput) clientPhoneInput.value = "";
+        if (clientEmailInput) clientEmailInput.value = "";
+        if (validUntilInput) validUntilInput.value = "";
+        if (paymentTermsInput) paymentTermsInput.value = "";
+        if (notesInput) notesInput.value = "";
+        try { localStorage.removeItem(COMPANY_STORAGE_KEY); } catch (e) {}
+        if (itemsBody) itemsBody.innerHTML = "";
+        createRow();
+        updateDate();
+        updatePreview();
+    });
 }
 
-updateDate();
+if (companyNameInput) {
+    companyNameInput.addEventListener("input", () => {
+        saveCompanyData();
+        updatePreview();
+    });
+}
+if (companyPhoneInput) {
+    companyPhoneInput.addEventListener("input", () => {
+        saveCompanyData();
+        updatePreview();
+    });
+}
+if (companyEmailInput) {
+    companyEmailInput.addEventListener("input", () => {
+        saveCompanyData();
+        updatePreview();
+    });
+}
+if (companyInfoInput) {
+    companyInfoInput.addEventListener("input", () => {
+        saveCompanyData();
+        updatePreview();
+    });
+}
+if (clientNameInput) clientNameInput.addEventListener("input", updatePreview);
+if (clientPhoneInput) clientPhoneInput.addEventListener("input", updatePreview);
+if (clientEmailInput) clientEmailInput.addEventListener("input", updatePreview);
+if (paymentTermsInput) paymentTermsInput.addEventListener("input", updatePreview);
+if (notesInput) notesInput.addEventListener("input", updatePreview);
+
 loadCompanyData();
+updateDate();
 createRow();
 updatePreview();
+updateAllTexts();
+updateLangToggle();

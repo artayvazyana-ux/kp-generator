@@ -65,7 +65,10 @@
                 </div>
                 <div class="form-grid">
                     <label class="form-field form-field--full">
-                        <span class="form-label" data-i18n="companyName">Название компании</span><span class="required">*</span>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span class="form-label" data-i18n="companyName">Название компании</span>
+                            <span class="required">*</span>
+                        </div>
                         <input type="text" id="companyName" placeholder="ООО «Название»" data-i18n-placeholder="companyPlaceholder">
                     </label>
                     <label class="form-field">
@@ -78,7 +81,7 @@
                     </label>
                     <label class="form-field form-field--full">
                         <span class="form-label" data-i18n="companyInfo">Адрес / реквизиты (опционально)</span>
-                        <input type="text" id="companyInfo" placeholder="Юридический адрес, ИНН и др." data-i18n-placeholder="notesPlaceholder">
+                        <input type="text" id="companyInfo" placeholder="Юридический адрес, ИНН и др.">
                     </label>
                 </div>
             </section>
@@ -89,7 +92,10 @@
                 </div>
                 <div class="form-grid">
                     <label class="form-field form-field--full">
-                        <span class="form-label" data-i18n="clientName">Кому (название компании / ФИО)</span><span class="required">*</span>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span class="form-label" data-i18n="clientName">Кому (название компании / ФИО)</span>
+                            <span class="required">*</span>
+                        </div>
                         <input type="text" id="clientName" placeholder="Заказчик" data-i18n-placeholder="clientPlaceholder">
                     </label>
                     <label class="form-field">
@@ -105,7 +111,10 @@
 
             <section class="card">
                 <div class="card-header card-header--split">
-                    <h3 data-i18n="positionsTitle">Позиции КП</h3><span class="required">*</span>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <h3 data-i18n="positionsTitle">Позиции КП</h3>
+                        <span class="required">*</span>
+                    </div>
                     <button type="button" class="btn btn--ghost" id="addRowBtn" data-i18n="addRow">+ Добавить строку</button>
                 </div>
                 <div class="table-wrapper">
@@ -115,8 +124,8 @@
                                 <th class="col-name" data-i18n="colName">Наименование услуги / работы</th>
                                 <th class="col-qty" data-i18n="colQty">Кол-во</th>
                                 <th class="col-unit" data-i18n="colUnit">Ед.</th>
-                                <th class="col-price" data-i18n="colPrice">Цена, ₽</th>
-                                <th class="col-sum" data-i18n="colSum">Сумма, ₽</th>
+                                <th class="col-price"><span data-i18n="priceLabel">Цена</span>, <span data-i18n="currency">₽</span></th>
+                                <th class="col-sum"><span data-i18n="sumLabel">Сумма</span>, <span data-i18n="currency">₽</span></th>
                                 <th class="col-actions"></th>
                             </tr>
                         </thead>
@@ -154,13 +163,13 @@
                                 <button type="button" class="calendar-nav" id="nextMonth">›</button>
                             </div>
                             <div class="calendar-weekdays">
-                                <span data-i18n="weekday0">Пн</span>
-                                <span data-i18n="weekday1">Вт</span>
-                                <span data-i18n="weekday2">Ср</span>
-                                <span data-i18n="weekday3">Чт</span>
-                                <span data-i18n="weekday4">Пт</span>
-                                <span data-i18n="weekday5">Сб</span>
-                                <span data-i18n="weekday6">Вс</span>
+                                <span>Пн</span>
+                                <span>Вт</span>
+                                <span>Ср</span>
+                                <span>Чт</span>
+                                <span>Пт</span>
+                                <span>Сб</span>
+                                <span>Вс</span>
                             </div>
                             <div class="calendar-days" id="calendarDays"></div>
                         </div>
@@ -228,12 +237,12 @@
                             <table class="kp-table">
                                 <thead>
                                     <tr>
-                                        <th data-i18n="colName">#</th>
+                                        <th data-i18n="colNumber">#</th>
                                         <th data-i18n="colName">Наименование</th>
                                         <th data-i18n="colQty">Кол-во</th>
                                         <th data-i18n="colUnit">Ед.</th>
-                                        <th data-i18n="colPrice">Цена, ₽</th>
-                                        <th data-i18n="colSum">Сумма, ₽</th>
+                                        <th><span data-i18n="priceLabel">Цена</span>, <span data-i18n="currency">₽</span></th>
+                                        <th><span data-i18n="sumLabel">Сумма</span>, <span data-i18n="currency">₽</span></th>
                                     </tr>
                                 </thead>
                                 <tbody id="previewItemsBody"></tbody>

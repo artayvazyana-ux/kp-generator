@@ -94,6 +94,25 @@ body::before {
     align-items: flex-start;
     gap: 16px;
     width: 100%;
+    flex-wrap: wrap;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    margin-left: auto;
+}
+
+.lang-toggle,
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .theme-toggle {
@@ -602,6 +621,11 @@ textarea:focus {
     width: 8%;
 }
 
+.items-table th,
+.items-table td {
+    vertical-align: middle;
+}
+
 .item-input {
     border-radius: 10px;
     padding: 7px 8px;
@@ -619,13 +643,33 @@ textarea:focus {
 
 .items-table tbody td {
     padding: 6px 8px;
-    vertical-align: top;
+    vertical-align: middle;
 }
 
 .item-sum-cell {
     text-align: right;
     white-space: nowrap;
     color: #b9bfd9;
+    vertical-align: middle;
+}
+
+.item-sum {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    line-height: 1;
+}
+
+.col-price,
+.col-sum {
+    text-align: right;
+}
+
+.items-table thead th.col-price,
+.items-table thead th.col-sum,
+.items-table tbody td:nth-child(4),
+.items-table tbody td:nth-child(5) {
+    text-align: right;
 }
 
 [data-theme="light"] .item-sum-cell {
