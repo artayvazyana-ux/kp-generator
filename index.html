@@ -67,7 +67,7 @@
                 </div>
                 <div class="form-grid">
                     <label class="form-field form-field--full">
-                        <div style="display:flex;align-items:center;gap:4px;">
+                        <div class="form-label-row">
                             <span class="form-label" data-i18n="companyName">Название компании</span>
                             <span class="required">*</span>
                         </div>
@@ -94,7 +94,7 @@
                 </div>
                 <div class="form-grid">
                     <label class="form-field form-field--full">
-                        <div style="display:flex;align-items:center;gap:4px;">
+                        <div class="form-label-row">
                             <span class="form-label" data-i18n="clientName">Кому (название компании / ФИО)</span>
                             <span class="required">*</span>
                         </div>
@@ -113,7 +113,7 @@
 
             <section class="card">
                 <div class="card-header card-header--split">
-                    <div style="display:flex;align-items:center;gap:4px;">
+                    <div class="form-label-row">
                         <h3 data-i18n="positionsTitle">Позиции КП</h3>
                         <span class="required">*</span>
                     </div>
@@ -150,7 +150,7 @@
                         <div class="date-field" id="dateFieldWrapper">
                             <input type="text" id="validUntilDisplay" readonly placeholder="дд.мм.гггг" data-i18n-placeholder="datePlaceholder">
                             <input type="hidden" id="validUntil">
-                            <button type="button" class="date-trigger" id="validUntilTrigger" aria-label="Открыть календарь" data-i18n-aria="calendarAriaLabel">
+                            <button type="button" class="date-trigger" aria-label="Открыть календарь" data-i18n-aria="calendarAriaLabel">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                     <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -298,12 +298,6 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
-    <script>
-        if (typeof window.htmlToImage === "undefined" && typeof htmlToImage !== "undefined") {
-            window.htmlToImage = htmlToImage;
-        }
-    </script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -1,38 +1,3 @@
-:root {
-    /* Dark theme (default) */
-    --bg: #0f1026;
-    --panel: #15182b;
-    --card: #1d2038;
-    --border: rgba(255, 255, 255, 0.08);
-    --text-primary: #f8f9fc;
-    --text-secondary: #b9bfd9;
-    --accent: #4f9bff;
-    --accent-hover: #6aa8ff;
-    --success: #3fb984;
-    --input-bg: rgba(15, 16, 38, 0.8);
-    --input-border: transparent;
-    --shadow-color: rgba(79, 155, 255, 0.6);
-    --hover-bg: rgba(255, 255, 255, 0.04);
-    --disabled-color: rgba(255, 255, 255, 0.25);
-}
-
-[data-theme="light"] {
-    --bg: #f5f6fa;
-    --panel: #ffffff;
-    --card: #ffffff;
-    --border: rgba(0, 0, 0, 0.08);
-    --text-primary: #1f2430;
-    --text-secondary: #5f667d;
-    --accent: #4f9bff;
-    --accent-hover: #6aa8ff;
-    --success: #3fb984;
-    --input-bg: #ffffff;
-    --input-border: #e5e7f2;
-    --shadow-color: rgba(79, 155, 255, 0.3);
-    --hover-bg: #f0f2f8;
-    --disabled-color: rgba(0, 0, 0, 0.25);
-}
-
 * {
     box-sizing: border-box;
 }
@@ -300,6 +265,12 @@ body::before {
 .form-label {
     font-size: 14px;
     color: #b9bfd9;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-label-row {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -681,6 +652,10 @@ textarea:focus {
     vertical-align: middle;
 }
 
+[data-theme="light"] .item-sum-cell {
+    color: #5f667d;
+}
+
 .item-sum {
     display: inline-flex;
     align-items: center;
@@ -688,20 +663,9 @@ textarea:focus {
     line-height: 1;
 }
 
-.col-price,
-.col-sum {
-    text-align: right;
-}
-
 .items-table thead th.col-price,
-.items-table thead th.col-sum,
-.items-table tbody td:nth-child(4),
-.items-table tbody td:nth-child(5) {
+.items-table thead th.col-sum {
     text-align: right;
-}
-
-[data-theme="light"] .item-sum-cell {
-    color: #5f667d;
 }
 
 .item-actions {

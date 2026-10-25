@@ -41,7 +41,6 @@ const translations = {
         resetForm: "Очистить форму",
         previewTitle: "Предпросмотр",
         previewHint: "Так будет выглядеть в PDF",
-        forWhom: "Для кого",
         itemsLabel: "Перечень работ и услуг",
         conditionsLabel: "Условия",
         regardsLabel: "С уважением,",
@@ -114,7 +113,6 @@ const translations = {
         resetForm: "Clear Form",
         previewTitle: "Preview",
         previewHint: "This is how it will look in PDF",
-        forWhom: "For Whom",
         itemsLabel: "Items List",
         conditionsLabel: "Terms",
         regardsLabel: "Best regards,",
@@ -171,7 +169,6 @@ const clientPhoneInput = document.getElementById("clientPhone");
 const clientEmailInput = document.getElementById("clientEmail");
 const validUntilInput = document.getElementById("validUntil");
 const validUntilDisplay = document.getElementById("validUntilDisplay");
-const validUntilTrigger = document.getElementById("validUntilTrigger");
 const dateFieldWrapper = document.getElementById("dateFieldWrapper");
 const calendarPopup = document.getElementById("calendarPopup");
 const calendarTitle = document.getElementById("calendarTitle");
